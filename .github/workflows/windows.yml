@@ -1,25 +1,32 @@
 
-name: Windows 11 environment test
+name: Temporary Windows Desktop
 
 on:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: windows-11-arm
+  desktop:
+    runs-on: windows-2025
+    timeout-minutes: 350
 
     steps:
-      - name: Check Windows version
+      - name: Enable Remote Desktop
         shell: pwsh
         run: |
-          Get-ComputerInfo |
-            Select-Object WindowsProductName,
-                          WindowsVersion,
-                          OsArchitecture
+          Set-Service -Name TermService -StartupType Automatic
+          Start-Service TermService
 
-      - name: Check available resources
+          net user runneradmin "TempPass-ChangeMe-927!" /add
+          net localgroup administrators runneradmin /add
+
+          Set-ItemProperty `
+            -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" `
+            -Name fDenyTSConnections -Value 0
+
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+      - name: Keep runner alive
         shell: pwsh
         run: |
-          Get-CimInstance Win32_ComputerSystem |
-            Select-Object TotalPhysicalMemory,
-                          NumberOfLogicalProcessors
+          Write-Host "Runner is ready."
+          Start-Sleep -Seconds 12000
