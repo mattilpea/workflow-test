@@ -1,0 +1,25 @@
+
+name: Windows 11 environment test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-11-arm
+
+    steps:
+      - name: Check Windows version
+        shell: pwsh
+        run: |
+          Get-ComputerInfo |
+            Select-Object WindowsProductName,
+                          WindowsVersion,
+                          OsArchitecture
+
+      - name: Check available resources
+        shell: pwsh
+        run: |
+          Get-CimInstance Win32_ComputerSystem |
+            Select-Object TotalPhysicalMemory,
+                          NumberOfLogicalProcessors
